@@ -1,5 +1,6 @@
 accuweather_config.py
 page.txt
+mysql.config
 *.pyc
 *.swp
 *.json
