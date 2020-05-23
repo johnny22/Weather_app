@@ -1,0 +1,7 @@
+accuweather_config.py
+page.txt
+*.pyc
+*.swp
+*.json
+*.pk1
+
