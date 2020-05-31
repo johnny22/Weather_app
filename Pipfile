@@ -8,6 +8,7 @@ verify_ssl = true
 [packages]
 requests = "*"
 beautifulsoup4 = "*"
+mysql-connector = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3"
