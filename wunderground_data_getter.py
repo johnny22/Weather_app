@@ -28,11 +28,15 @@ def make_call():
 class Wu_Data():
     def __init__(self, response_in):
         """response_in needs to be a soup object"""
-        self.current_temp = self.pretify_and_strip(response_in.find(class_="wu-unit-temperature").span)
+        try:
+            self.current_temp = self.pretify_and_strip(response_in.find(class_="wu-unit-temperature").span)
 
-        self.current_pressure = self.pretify_and_strip(response_in.find(class_="wu-unit-pressure").span)
-        self.today_precip = self.pretify_and_strip(response_in.find(class_="wu-unit-rain").span)
-        self.humidity = self.pretify_and_strip(response_in.find(class_="wu-unit-humidity").span)
+            self.current_pressure = self.pretify_and_strip(response_in.find(class_="wu-unit-pressure").span)
+            self.today_precip = self.pretify_and_strip(response_in.find(class_="wu-unit-rain").span)
+            self.humidity = self.pretify_and_strip(response_in.find(class_="wu-unit-humidity").span)
+        except AttributeError as error:
+            print(response_in)
+            raise error
         #print (self.current_pressure)
         #print (self.current_temp)
         #print (self.today_precip)
