@@ -13,7 +13,7 @@ def unpack(s):
 def store_data(table, column, data):
     sql = "INSERT INTO %s %s VALUE %s" % (table, column, data)
     try:
-        print (sql)
+        #print (sql)
         cursor.execute(sql)
         cnx.commit()
     except ValueError:
@@ -23,6 +23,8 @@ def store_data(table, column, data):
 
 
 def store_list(table, data_dict):
+    """This takes a table name and a dictionary of key:value pairs. 
+    It is built to deal with integers with quotes around them, so if a string needs to be stored, it needs to have double quotes"""
     current_date = str(datetime.datetime.now())[:-4]
     #print ('here')
     #print (current_date)

@@ -7,6 +7,7 @@ READ_FROM_DISK = False
 #URL = "https://www.wunderground.com/weather/us/wa/carnation"
 #tolt middle school station
 URL = "https://www.wunderground.com/dashboard/pws/KWACARNA1"
+LOCATION = 'KWACARNA1'
 
 
 def make_call():
@@ -25,7 +26,7 @@ def make_call():
     #current_temp = soup.find(class_="wu-unit-temperature")
     #current_pressure = soup.find(class_="wu-unit-pressure")
 
-class Wu_Data():
+class WuData():
     def __init__(self, response_in):
         """response_in needs to be a soup object"""
         try:
@@ -34,6 +35,7 @@ class Wu_Data():
             self.current_pressure = self.pretify_and_strip(response_in.find(class_="wu-unit-pressure").span)
             self.today_precip = self.pretify_and_strip(response_in.find(class_="wu-unit-rain").span)
             self.humidity = self.pretify_and_strip(response_in.find(class_="wu-unit-humidity").span)
+            self.location = LOCATION
         except AttributeError as error:
             print(response_in)
             raise error
@@ -57,6 +59,7 @@ class Wu_Data():
         data_dict['current_temp'] = self.current_temp
         data_dict['today_precip'] = self.today_precip
         data_dict['current_humidity'] = self.humidity
+        data_dict['location'] = '"' + self.location + '"'
 
         return data_dict
 

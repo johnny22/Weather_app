@@ -3,66 +3,149 @@ from mysql.connector import errorcode
 import mysql_config
 
 
-TABLE_NAME = 'wunderground'
-ACTION_VAR = 'CREATE TABLE'
-TABLE_LIST = [
+def create_table(TABLE_NAME, TABLE_LIST):
+    cnx = mysql.connector.connect(**mysql_config.config)
+    cursor = cnx.cursor()
+    #cursor.execute ("DROP TABLE {}".format (TABLE_NAME))
+
+    try:
+        cursor.execute ("USE {}".format('weather_app'))
+    except mysql.connector.Error as err:
+        print ("Database {} does not exist.".format('weather_app'))
+        raise err
+
+    try:
+        cursor.execute('CREATE TABLE ' + TABLE_NAME + ' (' + TABLE_LIST[0] + ')')
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
+            print ('table was already created')
+
+
+    for column in TABLE_LIST:
+        try:
+            print ("Adding column ", column)
+            cursor.execute('ALTER TABLE ' + TABLE_NAME + ' ADD ' + column)
+        except mysql.connector.Error as err:
+            if err.errno == 1060:
+                print ("column already existed")
+
+    cursor.close()
+    cnx.close()
+
+
+def create_wunderground_table():
+
+    TABLE_NAME = 'wunderground'
+    ACTION_VAR = 'CREATE TABLE'
+    TABLE_LIST = [
+            'date datetime',
+            'current_pressure decimal(6,2)',
+            'current_temp decimal(6,2)',
+            'today_precip decimal(6,2)',
+            'current_humidity decimal(6,2)'
+            ]
+
+    cnx = mysql.connector.connect(**mysql_config.config)
+    cursor = cnx.cursor()
+    #cursor.execute ("DROP TABLE {}".format (TABLE_NAME))
+
+    try:
+        cursor.execute ("USE {}".format('weather_app'))
+    except mysql.connector.Error as err:
+        print ("Database {} does not exist.".format('weather_app'))
+        raise err
+
+    try:
+        cursor.execute(ACTION_VAR + ' ' + TABLE_NAME + ' (' + TABLE_LIST[0] + ')')
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
+            print ('table was already created')
+
+
+    for column in TABLE_LIST:
+        try:
+            cursor.execute('ALTER TABLE ' + TABLE_NAME + ' ADD ' + column)
+        except mysql.connector.Error as err:
+            if err.errno == 1060:
+                print ("column already existed")
+
+    cursor.close()
+    cnx.close()
+
+
+def create_accuweather_table():
+    TABLE_NAME = 'accuweather'
+    TABLE_LIST = ['date datetime',
+            'hour_precip decimal(6,2)',
+            'humidity decimal(6,2)',
+            'temperature decimal(6,2)',
+            '12_hour_precip decimal(6,2)',
+            '24_hour_precip decimal(6,2)',
+            'pressure decimal(6,2)',
+            'pressure_tendancy VARCHAR(255)',
+            'apparent_temperature decimal(6,2)',
+            'indoor_relative_humidity decimal(6,2)',
+            'feels_like_temperature decimal(6,2)',
+            'relative_humidity decimal(6,2)',
+            'wet_bulb_temperature decimal(6,2)',
+            'wind_direction decimal(6,2)',
+            'wind_speed decimal(6,2)',
+            ]
+    cnx = mysql.connector.connect(**mysql_config.config)
+    cursor = cnx.cursor()
+    cursor.execute ("DROP TABLE {}".format (TABLE_NAME))
+
+    try:
+        cursor.execute ("USE {}".format('weather_app'))
+    except mysql.connector.Error as err:
+        print ("Database {} does not exist.".format('weather_app'))
+        raise err
+
+    try:
+        print ('creating table ', TABLE_NAME)
+        cursor.execute('CREATE TABLE ' + TABLE_NAME + ' (' + TABLE_LIST[0] + ')')
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
+            print ('table was already created')
+    
+    for column in TABLE_LIST:
+        try:
+            print ("Adding column ", column)
+            cursor.execute('ALTER TABLE ' + TABLE_NAME + ' ADD ' + column)
+        except mysql.connector.Error as err:
+            if err.errno == 1060:
+                print ("Column already existed")
+            else: raise err
+
+    cursor.close()
+    cnx.close()
+
+wunderground_column_list = [
         'date datetime',
+        'location VARCHAR(255)',
         'current_pressure decimal(6,2)',
         'current_temp decimal(6,2)',
         'today_precip decimal(6,2)',
         'current_humidity decimal(6,2)'
         ]
 
+accuweather_column_list = ['date datetime',
+        'location VARCHAR(255)',
+        'hour_precip decimal(6,2)',
+        'humidity decimal(6,2)',
+        'temperature decimal(6,2)',
+        '12_hour_precip decimal(6,2)',
+        '24_hour_precip decimal(6,2)',
+        'pressure decimal(6,2)',
+        'pressure_tendancy VARCHAR(255)',
+        'apparent_temperature decimal(6,2)',
+        'indoor_relative_humidity decimal(6,2)',
+        'feels_like_temperature decimal(6,2)',
+        'relative_humidity decimal(6,2)',
+        'wet_bulb_temperature decimal(6,2)',
+        'wind_direction decimal(6,2)',
+        'wind_speed decimal(6,2)',
+        ]
 
-        
-
-
-cnx = mysql.connector.connect(**mysql_config.config)
-cursor = cnx.cursor()
-cursor.execute ("DROP TABLE {}".format (TABLE_NAME))
-
-try:
-    cursor.execute ("USE {}".format('weather_app'))
-except mysql.connector.Error as err:
-    print ("Database {} does not exist.".format('weather_app'))
-    print (err)
-#cursor.execute("CREATE TABLE wunderground (date DATETIME, current_pressure DECIMAL)") 
-
-try:
-    cursor.execute(ACTION_VAR + ' ' + TABLE_NAME + ' (' + TABLE_LIST[0] + ')')
-except mysql.connector.Error as err:
-    if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
-        print ('table was already created')
-
-
-for column in TABLE_LIST:
-    try:
-        cursor.execute('ALTER TABLE ' + TABLE_NAME + ' ADD ' + column)
-    except mysql.connector.Error as err:
-        if err.errno == 1060:
-            print ("column already existed")
-
-#for table_name in CREATE_TABLES:
-#    table_description = CREATE_TABLES[table_name]
-#    try:
-#        print ("Creating table {}: ".format(table_name))
-#        print (table_description)
-#        cursor.execute(table_description)
-#    except mysql.connector.Error as err:
-#        if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
-#            print("table already created, let's try altering instead")
-#            try:
-#                print ('what about now?')
-#                print  (ALTER_TABLES['wunderground'])
-#                cursor.execute(ALTER_TABLES['wunderground'])
-#                print ('do we get here?')
-#            except mysql.connector.Error as err1:
-#                print ('so we are here?')
-#                print (err1)
-#        else:
-#            print ("we are trying to create the table")
-#            print (err)
-
-
-cursor.close()
-cnx.close()
+create_table('wunderground', wunderground_column_list)
+create_table('accuweather', accuweather_column_list)
