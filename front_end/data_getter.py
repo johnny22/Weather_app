@@ -23,11 +23,14 @@ class wunder_data():
             #print (entry + " : ")
             #print (self.current_conditions[entry])
         output +=('Rainfall for the last 7 days :\n')
-        for entry in self.total_dict:
-            #output += date.date + ": " + value
-            #output += str(entry)
-            output += str(entry.date()) + ": "
-            output += str(self.total_dict[entry]) + "\n"
+        #for entry in self.total_dict:
+        #    #output += date.date + ": " + value
+        #    #output += str(entry)
+        #    output += str(entry.date()) + ": "
+        #    #output += str(self.total_dict[entry]) + "\n"
+        for entry in self.total_list:
+            output += str(entry[0].date()) + ": " + str(entry[1]) + "\n"
+            #output += str(
         output += ("\nTotal rainfall for this week is : " + str(self.weekly_precip))
         return output
 
@@ -99,6 +102,7 @@ class wunder_data():
             #print (date[0].date())
             #print (date[0])
             out_dates.append(date[0])
+            #print (out_dates[-7:])
         #for date in self.last_time_of_day_list:
         #    print (date)
 
@@ -112,13 +116,20 @@ class wunder_data():
 
     def get_weekly_precip(self):
         """should this always return info for the last week, or should it take a day as input?"""
-        self.total_dict = {}
+        #changing to list of tuples to keep order
+        #self.total_dict = {}
+        self.total_list = []
         self.weekly_precip = 0
         for date in self.last_time_of_day_list[-7:]:
-            self.total_dict[date] = self.return_daily_precip(date)
+            self.total_list.append(tuple((date, self.return_daily_precip(date))))
+            #self.total_dict[date] = self.return_daily_precip(date)
 
-        for day in self.total_dict:
-            self.weekly_precip += self.total_dict[day]
+        #for day in self.total_dict:
+            #self.weekly_precip += self.total_dict[day]
+
+        for day in self.total_list:
+            self.weekly_precip += int(day[1])
+        print (self.total_list)
 
 
 
