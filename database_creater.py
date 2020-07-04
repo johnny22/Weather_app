@@ -90,6 +90,14 @@ def create_accuweather_table():
             'wet_bulb_temperature decimal(6,2)',
             'wind_direction decimal(6,2)',
             'wind_speed decimal(6,2)',
+            'dew_point decimal(6,2)',
+            'temperature_max_past_12 decimal(6,2)',
+            'temperature_min_past_12 decimal(6,2)',
+            'temperature_max_past_24 decimal(6,2)',
+            'temperature_min_past_24 decimal(6,2)'
+
+
+
             ]
     cnx = mysql.connector.connect(**mysql_config.config)
     cursor = cnx.cursor()

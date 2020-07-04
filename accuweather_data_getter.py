@@ -7,6 +7,8 @@ READ_FROM_FILE = False
 
 
 AW_CURRENT_REQUEST = ("http://dataservice.accuweather.com/currentconditions/v1/%s?apikey=%s&details=true" % (config.CARNATION_KEY, config.DEV_KEY))
+## Looks like maybe they only allow 5 days and less?
+AW_FORECAST_REQUEST = ("http://dataservice.accuweather.com/forecasts/v1/daily/5day/%s?apikey=%s&details=true" % (config.CARNATION_KEY, config.DEV_KEY))
 LOCATION = 'Carnation'
 
 #if not READ_FROM_FILE:
@@ -20,8 +22,16 @@ LOCATION = 'Carnation'
 #
 
 def make_call():
+    """this makes the call for the current conditions"""
     req = requests.get(AW_CURRENT_REQUEST)
     return req.json()
+
+def make_forecast_call():
+    req = requests.get(AW_FORECAST_REQUEST)
+    with open('forecast.json', 'w') as out_file:
+        json.dump(req.json(), out_file)
+    return req.json()
+
 
 
 #print (details)
@@ -49,15 +59,27 @@ class AwData():
         self.wind_speed = json_in[0]["Wind"]["Speed"]["Imperial"]["Value"]
         self.location = LOCATION
 
+        ### These are new attributes and need to be stored
+        self.dew_point = json_in[0]["DewPoint"]["Imperial"]["Value"]
+        self.temperature_past_12_max = json_in[0]["TemperatureSummary"]["Past12HourRange"]["Maximum"]["Imperial"]["Value"]
+        self.temperature_past_12_min = json_in[0]["TemperatureSummary"]["Past12HourRange"]["Minimum"]["Imperial"]["Value"]
+        self.temperature_past_24_max = json_in[0]["TemperatureSummary"]["Past24HourRange"]["Maximum"]["Imperial"]["Value"]
+        self.temperature_past_24_min = json_in[0]["TemperatureSummary"]["Past24HourRange"]["Minimum"]["Imperial"]["Value"]
+
+
+        
+
 
 
     def __str__(self):
-        out_text = "Precipition right now is: " + str(self.Precip1hr)
-        out_text += "\nThe Temperature right now is : "  + str(self.Temperature)
-        out_text += "\nThe Humidity right now is: " +  str(self.RelativeHumidity)
-        out_text += "\nThe Precipitaiton in the last 24 hours is: " + str(self.PrecipPast24)
+        out_text = "Precipition right now is: " + str(self.precip1hr)
+        out_text += "\nThe Temperature right now is : "  + str(self.temperature)
+        out_text += "\nThe Humidity right now is: " +  str(self.relative_humidity)
+        out_text += "\nThe Precipitaiton in the last 24 hours is: " + str(self.precip_past24)
         #print ("The Precipitaiton in the last 12 hours is: ", self.PrecipPast12)
-        out_text += "\nThe Pressure is %s and it is trending %s." % (self.Pressure, self.PressureTendency)
+        out_text += "\nThe Pressure is %s and it is trending %s." % (self.pressure, self.pressure_tendency)
+        out_text += "\nThe high temperature in the past 24 hours is: " + str(self.temperature_past_24_max)
+        out_text += "\nThe low temperature in the past 24 hours is : " + str(self.temperature_past_12_min)
         return out_text
         #print (self.IndoorRelativeHumidity)
         #print (self.ApparentTemperature)
@@ -80,6 +102,13 @@ class AwData():
         data_dict['wind_speed'] = self.wind_speed
         data_dict['location'] = '"' + self.location + '"'
 
+        data_dict['dew_point'] = self.dew_point
+        data_dict['temperature_max_past_12'] = self.temperature_past_12_max
+        data_dict['temperature_min_past_12'] = self.temperature_past_12_min
+        data_dict['temperature_max_past_24'] = self.temperature_past_24_max
+        data_dict['temperature_min_past_24'] = self.temperature_past_24_min
+
+
         return data_dict
 
 #current = Aw_Data(details)
@@ -92,6 +121,8 @@ if __name__ == "__main__":
     details = make_call()
     current = AwData(details)
     print (current)
+    forecast = make_forecast_call()
+
 
 """ to do:
     figure out some way to store data for now.
