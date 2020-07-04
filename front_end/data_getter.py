@@ -22,8 +22,13 @@ class wunder_data():
             output +='\n'
             #print (entry + " : ")
             #print (self.current_conditions[entry])
-
-        output += ("Total rainfall for this week is : " + str(self.weekly_precip))
+        output +=('Rainfall for the last 7 days :\n')
+        for entry in self.total_dict:
+            #output += date.date + ": " + value
+            #output += str(entry)
+            output += str(entry.date()) + ": "
+            output += str(self.total_dict[entry]) + "\n"
+        output += ("\nTotal rainfall for this week is : " + str(self.weekly_precip))
         return output
 
 
@@ -107,17 +112,13 @@ class wunder_data():
 
     def get_weekly_precip(self):
         """should this always return info for the last week, or should it take a day as input?"""
-        total_dict = {}
+        self.total_dict = {}
         self.weekly_precip = 0
         for date in self.last_time_of_day_list[-7:]:
-            total_dict[date] = self.return_daily_precip(date)
+            self.total_dict[date] = self.return_daily_precip(date)
 
-        for day in total_dict:
-            self.weekly_precip += total_dict[day]
-
-
-
-
+        for day in self.total_dict:
+            self.weekly_precip += self.total_dict[day]
 
 
 
