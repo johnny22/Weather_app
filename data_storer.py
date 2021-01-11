@@ -27,7 +27,7 @@ def store_list(table, data_dict):
     It is built to deal with integers with quotes around them, so if a string needs to be stored, it needs to have double quotes"""
     current_date = str(datetime.datetime.now())[:-4]
     #print ('here')
-    #print (current_date)
+    print (current_date)
     data_dict['date'] ="'" +  str(current_date) + "'"
 
     #print (data_dict)

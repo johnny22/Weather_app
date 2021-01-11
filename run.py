@@ -8,9 +8,20 @@ import datetime
 
 
 #get data from wunderground
-page = wunder.make_call()
-conditions = wunder.WuData(page)
-wunder_data = conditions.get_data_dict()
+
+##################################################
+#Need to update from wunderground_data_getter for new way of calling
+location_list = ['KWACARNA1', 'KWAFALLC80']
+page_list = []
+for location in location_list:
+    page = wunder.make_call(location)
+    page_list.append((page, location))
+for tup in page_list:
+    conditions = wunder.WuData(tup[0], tup[1])
+    wunder_data = conditions.get_data_dict()
+
+    #Store wunderground data
+    data_storer.store_list('wunderground', wunder_data)
 
 #get data from accuweather
 accu_page = accu.make_call()
@@ -19,12 +30,9 @@ accu_data = accu_conditions.get_data_dict()
 
 
 
-
-
-#store data
+#store accuweather data
 data_storer.store_list('accuweather', accu_data)
 
-data_storer.store_list('wunderground', wunder_data)
 
 with open('log.txt', 'a') as log_file:
     #print (datetime.datetime.now())

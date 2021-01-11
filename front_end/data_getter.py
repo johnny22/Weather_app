@@ -2,6 +2,8 @@ import mysql_config
 import mysql.connector
 from mysql.connector import errorcode
 import datetime
+#server only
+import os
 
 
 cnx = mysql.connector.connect(**mysql_config.config)
@@ -14,6 +16,7 @@ class wunder_data():
         self.get_current_data()
         self.get_last_dates()
         self.get_weekly_precip()
+        #self.out_web_file()
 
     def __str__(self):
         output = ''
@@ -38,6 +41,27 @@ class wunder_data():
     def get_json(self):
         pass
 
+
+    def out_web_file(self):
+        with open('/var/www/weather_app/index.html', 'w') as out:
+            out_text = '<html> \n <body> \n'
+            for entry in self.data_list:
+                out_text += '%s: %s  <br> \n' % (str(entry), str(self.current_conditions[entry]))
+
+            out_text +=('Rainfall for the last 7 days :<br>\n')
+            try:
+                for entry in self.total_list:
+                    out_text += str(entry[0].date()) + ": " + str(entry[1]) + "<br> \n"
+                    #output += str(
+                out_text += ("\nTotal rainfall for this week is : " + str(self.weekly_precip + self.current_conditions[self.data_list[3]]) + "<br>")
+            except AttributeError:
+                out_text += ("\n There is not enough data for total rainfall yet, please check back later.")
+            
+
+
+            out_text += '</html> \n </body> \n'
+            out.write(out_text)
+
     def get_data(self):
         table = {39: None, 91: None, 93: None}
         self.data_list = ['date', 'current_pressure', 'current_temp', 'today_precip', 'current_humidity']
@@ -45,6 +69,7 @@ class wunder_data():
         #print(sql)
         self.cursor.execute(sql)
         self.data = self.cursor.fetchall()
+        #print (self.data)
 
 
 
@@ -67,7 +92,6 @@ class wunder_data():
         for key in self.data_list:
             out_dict[key] = data[inc]
             inc +=1
-
 
         return out_dict['today_precip']
 
@@ -98,11 +122,9 @@ class wunder_data():
             if date[0].date() < last_day:
                 pass
 
-            
-            #print (date[0].date())
-            #print (date[0])
             out_dates.append(date[0])
-            #print (out_dates[-7:])
+            # TESTING
+            #print (self.last_time_of_day_list)
         #for date in self.last_time_of_day_list:
         #    print (date)
 
@@ -112,6 +134,8 @@ class wunder_data():
         #for date in self.last_time_of_day_list:
         for entry in self.data:
             if date in entry:
+                #TESTING
+                #print (self.return_precip(entry))
                 return (self.return_precip(entry))
 
     def get_weekly_precip(self):
@@ -121,15 +145,16 @@ class wunder_data():
         self.total_list = []
         self.weekly_precip = 0
         for date in self.last_time_of_day_list[-7:]:
-            self.total_list.append(tuple((date, self.return_daily_precip(date))))
-            #self.total_dict[date] = self.return_daily_precip(date)
+            if date != '':
+                self.total_list.append(tuple((date, self.return_daily_precip(date))))
+                #self.total_dict[date] = self.return_daily_precip(date)
 
-        #for day in self.total_dict:
-            #self.weekly_precip += self.total_dict[day]
-
-        for day in self.total_list:
-            self.weekly_precip += int(day[1])
-        print (self.total_list)
+        try:
+            for day in self.total_list:
+                self.weekly_precip += day[1]
+        except TypeError as error:
+            pass
+        #print (self.total_list)
 
 
 
@@ -159,7 +184,8 @@ class wunder_data():
         #print (data)
 
 test = wunder_data(cnx)
-print (test)
+test.out_web_file()
+#print (test)
 #test.get_data()
 #test.print_current_data()
 #test.get_last_dates()
