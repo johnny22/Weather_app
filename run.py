@@ -4,7 +4,7 @@ import data_storer
 import datetime
 
 
-
+counter_var = 1
 
 
 #get data from wunderground
@@ -24,14 +24,33 @@ for tup in page_list:
     data_storer.store_list('wunderground', wunder_data)
 
 #get data from accuweather
-accu_page = accu.make_call()
-accu_conditions = accu.AwData(accu_page)
-accu_data = accu_conditions.get_data_dict()
+try:
+    with open('counter.txt', 'r+') as counter_file:
+        try:
+            old_counter = counter_file.read()
+            counter_var += int(old_counter)
+        except ValueError as e:
+            #raise e
+            print (e)
+
+
+        counter_file.truncate(0)
+        counter_file.seek(0)
+        counter_file.write(str(counter_var))
+
+except FileNotFoundError:
+    with open('counter.txt', 'w') as counter_file:
+        counter_file.write(str(1))
+
+if counter_var % 4 == 0:
+    accu_page = accu.make_call()
+    accu_conditions = accu.AwData(accu_page)
+    accu_data = accu_conditions.get_data_dict()
 
 
 
 #store accuweather data
-data_storer.store_list('accuweather', accu_data)
+#data_storer.store_list('accuweather', accu_data)
 
 
 with open('log.txt', 'a') as log_file:

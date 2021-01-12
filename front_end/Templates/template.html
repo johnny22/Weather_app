@@ -1,0 +1,23 @@
+{% extends "page.html" %}
+{% block content %}
+
+<div class="main">
+    {% for weather_dict in dict_list %}
+    <div class="{{weather_dict.class}}">
+        <p> Date: {{weather_dict.date}}</p>
+        <p> Location: {{weather_dict.location}}</p>
+        <p>Pressure: {{weather_dict.current_pressure}}</p>
+        <p>Temperature: {{weather_dict.current_temp}}</p>
+        <p>Rain Today: {{weather_dict.today_precip}}</p>
+        <p>Humidity: {{weather_dict.current_humidity}} </p>
+        <p>Rainfall for the last 7 days:</p>
+    {% for daily_rain in weather_dict.rain_list %}
+    <p>{{daily_rain.0}}: {{daily_rain.1}} </p>
+    {% endfor %}
+    <p>Total Rainfall this week: {{weather_dict.weekly_rain}}</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+            

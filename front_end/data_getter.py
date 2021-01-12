@@ -4,12 +4,14 @@ from mysql.connector import errorcode
 import datetime
 #server only
 import os
+import output_template
 
 
 cnx = mysql.connector.connect(**mysql_config.config)
 
 class wunder_data():
-    def __init__(self, connection):
+    def __init__(self, connection, location):
+        self.location = location
         self.connection = connection
         self.cursor = self.connection.cursor()
         self.get_data()
@@ -41,6 +43,23 @@ class wunder_data():
     def get_json(self):
         pass
 
+    def template_out_dict(self):
+        out_dict = {}
+        rain_list = []
+        for entry in self.data_list:
+            out_dict[entry] = self.current_conditions[entry]
+        for entry in self.total_list:
+            out = (str(entry[0].date()), str(entry[1]))
+            rain_list.append(out)
+        out_dict['rain_list'] = rain_list
+        if self.location =='KWACARNA1':
+            out_dict['class'] = 'left'
+        else:
+            out_dict['class'] = 'right'
+
+        out_dict['weekly_rain'] = str((self.weekly_precip + out_dict['today_precip']))
+        return out_dict
+
 
     def out_web_file(self):
         with open('/var/www/weather_app/index.html', 'w') as out:
@@ -57,16 +76,13 @@ class wunder_data():
             except AttributeError:
                 out_text += ("\n There is not enough data for total rainfall yet, please check back later.")
             
-
-
             out_text += '</html> \n </body> \n'
             out.write(out_text)
 
     def get_data(self):
         table = {39: None, 91: None, 93: None}
-        self.data_list = ['date', 'current_pressure', 'current_temp', 'today_precip', 'current_humidity']
-        sql = "SELECT {} FROM wunderground ORDER BY date DESC".format(str(self.data_list).translate(table))
-        #print(sql)
+        self.data_list = ['date', 'location', 'current_pressure', 'current_temp', 'today_precip', 'current_humidity']
+        sql = "SELECT {0} FROM wunderground WHERE location='{1}' ORDER BY date DESC".format(str(self.data_list).translate(table), self.location)
         self.cursor.execute(sql)
         self.data = self.cursor.fetchall()
         #print (self.data)
@@ -74,7 +90,6 @@ class wunder_data():
 
 
     def get_current_data(self):
-        #print (self.data)
         out_dict = {}
         x = 0
         inc = 0
@@ -182,9 +197,20 @@ class wunder_data():
         #print (out_dict)
         #print (type(data))
         #print (data)
+location_list = ['KWACARNA1', 'KWAFALLC80']
+out_list = []
+for location in location_list:
+    test = wunder_data(cnx, location)
+    out_list.append(test.template_out_dict())
 
-test = wunder_data(cnx)
-test.out_web_file()
+
+#print (out_list)
+output_text = output_template.render_template(out_list)
+
+with open('/var/www/weather_app/index.html', 'w') as out:
+        out.write(output_text)
+
+    #test.out_web_file()
 #print (test)
 #test.get_data()
 #test.print_current_data()
