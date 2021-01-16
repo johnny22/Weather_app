@@ -57,6 +57,8 @@ class wunder_data():
         else:
             out_dict['class'] = 'right'
 
+        out_dict['pressure_direction'] = self.get_point_list()
+
         out_dict['weekly_rain'] = str((self.weekly_precip + out_dict['today_precip']))
         return out_dict
 
@@ -101,14 +103,15 @@ class wunder_data():
         self.current_conditions = out_dict
         #print (out_dict)
 
-    def return_precip(self, data):
+    def return_value_list(self, data, name):
+        """data is data list, name is key of wanted value"""
         out_dict = {}
         inc = 0
         for key in self.data_list:
             out_dict[key] = data[inc]
             inc +=1
+        return out_dict[name]
 
-        return out_dict['today_precip']
 
 
     def get_last_dates(self):
@@ -150,8 +153,8 @@ class wunder_data():
         for entry in self.data:
             if date in entry:
                 #TESTING
-                #print (self.return_precip(entry))
-                return (self.return_precip(entry))
+                #print (self.return_value_list(entry))
+                return (self.return_value_list(entry, 'today_precip'))
 
     def get_weekly_precip(self):
         """should this always return info for the last week, or should it take a day as input?"""
@@ -166,8 +169,10 @@ class wunder_data():
 
         try:
             for day in self.total_list:
-                self.weekly_precip += day[1]
+                if day[1] != None:
+                    self.weekly_precip += day[1]
         except TypeError as error:
+            #raise error
             pass
         #print (self.total_list)
 
@@ -180,9 +185,57 @@ class wunder_data():
     def get_yearly_precip(self):
         pass
 
+    def get_pressure_direction(self):
+        out_list = []
+        for entry in self.data[:7]:
+            #print (entry)
+            #pressure = self.return_value_list(entry, 'current_pressure')
+            out_list.append(entry[2])
+        out_list.reverse()
+        return out_list
+        #for x in out_list[-7:]:
+        #    print (x)
 
-        """to do:
-        select last date of each day and pull data for each of those, then add today_precip"""
+    def get_point_list(self):
+        #out_var = ''
+        ##y_list = [9, 8, 7.7, 7.6, 7.5, 7.6, 7.4, 7.3, 7.3, 7.2]
+        ##y_list = [10.13, 10.32, 10.33, 10.30, 10.31, 10.33, 9.99, 9.89, 9.95, 9.8]
+        #for inc in range(0, 10, 2):
+        #    out_var += str(x_list[inc]*4)
+        #    out_var += ','
+        #    out_var += str(y_list[inc]*4)
+        #    out_var += ' '
+        #return out_var
+        pressure_list = self.get_pressure_direction()
+        #print (pressure_list)
+        if (abs(pressure_list[6]) - abs(pressure_list[5])) > .03 or (abs(pressure_list[6]) - abs(pressure_list[4])) > .03:
+            if (pressure_list [6] > pressure_list[5]) or (pressure_list [6] > pressure_list[4]):
+                out_var = "10,30 10,0 0,4 20,4, 10,0"
+                out_html = '&#8593'
+                print (self.location, ': up')
+            else:
+                out_var = "10,0 10,30, 0,26, 20,26 10,30"
+                out_html = '&#8595'
+                print (self.location, ': down')
+            
+        else:
+            out_var = "10,0 10,30 0,26 20,26, 10,30"
+            out_html = '&#8594'
+            print (self.location, ': steady')
+
+        return out_html
+
+        
+ 
+
+
+        
+
+
+            #print(self.data['current_pressure'])
+            #print (len(self.data))
+
+
 
 
 
@@ -200,8 +253,8 @@ class wunder_data():
 location_list = ['KWACARNA1', 'KWAFALLC80']
 out_list = []
 for location in location_list:
-    test = wunder_data(cnx, location)
-    out_list.append(test.template_out_dict())
+    weather_data = wunder_data(cnx, location)
+    out_list.append(weather_data.template_out_dict())
 
 
 #print (out_list)
