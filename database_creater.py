@@ -16,6 +16,7 @@ def create_table(TABLE_NAME, TABLE_LIST):
 
     try:
         cursor.execute('CREATE TABLE ' + TABLE_NAME + ' (' + TABLE_LIST[0] + ')')
+        print ('Created table {}.'.format(TABLE_NAME))
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
             print ('table was already created')
@@ -134,8 +135,34 @@ wunderground_column_list = [
         'current_pressure decimal(6,2)',
         'current_temp decimal(6,2)',
         'today_precip decimal(6,2)',
-        'current_humidity decimal(6,2)'
+        'current_humidity decimal(6,2)',
         ]
+
+wunderground_forecast_column_list = [
+        'date_gathered datetime',
+        'date_forecast datetime',
+        'max_temp decimal(6,2)',
+        'min_temp decimal(6,2)',
+        'qpf decimal(6,2)',
+        'precip_type_day VARCHAR(255)',
+        'precip_type_night VARCHAR(255)',
+        'precip_chance_day decimal(6,2)',
+        'precip_chance_night decimal(6,2)',
+        'relative_humidity_day decimal(6,2)',
+        'relative_humidity_night decimal(6,2)',
+        'wx_phrase_day VARCHAR(255)',
+        'wx_phrase_night VARCHAR(255)',
+        'snow_amount_day decimal(6,2)',
+        'snow_amount_night decimal(6,2)',
+        'wind_direction_day decimal(6,2)',
+        'wind_direction_night decimal(6,2)',
+        'wind_speed_day decimal(6,2)',
+        'wind_speed_night decimal(6,2)',
+        'cloud_cover_chance_day decimal(6,2)',
+        'cloud_cover_chance_night decimal(6,2)'
+        ]
+
+
 
 accuweather_column_list = ['date datetime',
         'location VARCHAR(255)',
@@ -162,3 +189,4 @@ accuweather_column_list = ['date datetime',
 
 create_table('wunderground', wunderground_column_list)
 create_table('accuweather', accuweather_column_list)
+create_table('wunderground_forecast', wunderground_forecast_column_list)
