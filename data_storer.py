@@ -25,10 +25,12 @@ def store_data(table, column, data):
 def store_list(table, data_dict):
     """This takes a table name and a dictionary of key:value pairs. 
     It is built to deal with integers with quotes around them, so if a string needs to be stored, it needs to have double quotes"""
-    current_date = str(datetime.datetime.now())[:-4]
-    #print ('here')
-    print (data_dict)
-    data_dict['date'] ="'" +  str(current_date) + "'"
+
+
+    #need to change this we should probably have the date created in each data getting location
+    if table != 'wunderground_forecast':
+        current_date = str(datetime.datetime.now())[:-4]
+        data_dict['date'] ="'" +  str(current_date) + "'"
 
     #print (data_dict)
 
