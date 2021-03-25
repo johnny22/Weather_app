@@ -2,12 +2,117 @@ import mysql_config
 import mysql.connector
 from mysql.connector import errorcode
 import datetime
+import decimal
 #server only
 import os
 import output_template
 
 
 cnx = mysql.connector.connect(**mysql_config.config)
+
+
+class wu_forecast():
+    def __init__(self, connection):
+        self.wunderground_forecast_column_list = [
+        'date_gathered',
+        'date_forecast',
+        'max_temp',
+        'min_temp',
+        'qpf',
+        'precip_type_day',
+        'precip_type_night',
+        'precip_chance_day',
+        'precip_chance_night',
+        'relative_humidity_day',
+        'relative_humidity_night',
+        'wx_phrase_day',
+        'wx_phrase_night',
+        'snow_amount_day',
+        'snow_amount_night',
+        'wind_direction_day',
+        'wind_direction_cardinal_day',
+        'wind_direction_night',
+        'wind_direction_cardinal_night',
+        'wind_speed_day',
+        'wind_speed_night',
+        'cloud_cover_chance_day',
+        'cloud_cover_chance_night'
+        ]
+        self.date = str(datetime.datetime.now())[:-13]
+        #print (datetime.datetime.now().date())
+
+        self.connection = connection
+        self.cursor = self.connection.cursor()
+        self.get_forecast_data()
+        self.out_list_test()
+
+    def get_forecast_data(self):
+        table = {39: None, 91: None, 93: None}
+        # does this get every forecast from today, or only the last one?
+        sql = "SELECT {0} FROM wunderground_forecast WHERE date_gathered LIKE '{1}%' ORDER BY date_forecast DESC".format(str(self.wunderground_forecast_column_list).translate(table), self.date)
+        self.cursor.execute(sql)
+        self.forecast_data = self.cursor.fetchall()
+
+    def get_out_list(self):
+        """this should return a list of dictionaries for each day"""
+        out_list = []
+        shortened_out_list = []
+        x = 0
+        for day in self.forecast_data:
+            out_dict = {}
+            inc = 0
+            for key in self.wunderground_forecast_column_list:
+                if key == 'date_forecast':
+                    #day[inc] = day[inc].date()
+                    out_dict[key] = day[inc].date()
+                elif type(day[inc]) == decimal.Decimal and key != 'qpf':
+                    out_dict[key] = str(day[inc])[:-3]
+                else:
+                    out_dict[key] = day[inc]
+                inc += 1
+
+            out_list.append(out_dict)
+
+        last_date = self.get_last_gathered_date(out_list)
+
+
+        for day in out_list:
+            if day['date_gathered'] == last_date:
+                shortened_out_list.append(day)
+
+        shortened_out_list.reverse()
+            
+
+        return shortened_out_list
+
+    def get_last_gathered_date(self, in_list):
+        """ takes a list of all databse entries gathered this hour, and returns the date the last one was gathered on"""
+        date_gathered_list = []
+        print (in_list)
+        for out_day in in_list:
+            for y in out_day:
+                #print (y, ': ', out_day[y])
+                if y == "date_gathered":
+                    date_gathered_list.append(out_day[y])
+        date_gathered_list = list(set(date_gathered_list))
+        print (date_gathered_list)
+        last_date = date_gathered_list[0]
+        for date in date_gathered_list:
+            if date > last_date:
+                last_date = date
+        return last_date
+
+
+    def out_list_test(self):
+        index = 0
+        for forecast_day in self.forecast_data:
+            #print (len(day))
+            #print (type(day))
+            for item in self.wunderground_forecast_column_list:
+                #print (item[self.wunderground_forecast_column_list.index(item)], ': ', forecast_day)
+                pass
+
+
 
 class wunder_data():
     def __init__(self, connection, location):
@@ -57,6 +162,8 @@ class wunder_data():
         else:
             out_dict['class'] = 'right'
 
+        out_dict['pressure_direction'] = self.get_point_list()
+
         out_dict['weekly_rain'] = str((self.weekly_precip + out_dict['today_precip']))
         return out_dict
 
@@ -81,7 +188,7 @@ class wunder_data():
 
     def get_data(self):
         table = {39: None, 91: None, 93: None}
-        self.data_list = ['date', 'location', 'current_pressure', 'current_temp', 'today_precip', 'current_humidity']
+        self.data_list = ['date', 'location', 'current_pressure', 'current_temp', 'today_precip', 'current_humidity', 'wind_speed', 'wind_direction', 'wind_gust', 'wind_chill', 'dew_point']
         sql = "SELECT {0} FROM wunderground WHERE location='{1}' ORDER BY date DESC".format(str(self.data_list).translate(table), self.location)
         self.cursor.execute(sql)
         self.data = self.cursor.fetchall()
@@ -101,14 +208,15 @@ class wunder_data():
         self.current_conditions = out_dict
         #print (out_dict)
 
-    def return_precip(self, data):
+    def return_value_list(self, data, name):
+        """data is data list, name is key of wanted value"""
         out_dict = {}
         inc = 0
         for key in self.data_list:
             out_dict[key] = data[inc]
             inc +=1
+        return out_dict[name]
 
-        return out_dict['today_precip']
 
 
     def get_last_dates(self):
@@ -150,8 +258,8 @@ class wunder_data():
         for entry in self.data:
             if date in entry:
                 #TESTING
-                #print (self.return_precip(entry))
-                return (self.return_precip(entry))
+                #print (self.return_value_list(entry))
+                return (self.return_value_list(entry, 'today_precip'))
 
     def get_weekly_precip(self):
         """should this always return info for the last week, or should it take a day as input?"""
@@ -166,55 +274,63 @@ class wunder_data():
 
         try:
             for day in self.total_list:
-                self.weekly_precip += day[1]
+                if day[1] != None:
+                    self.weekly_precip += day[1]
         except TypeError as error:
+            #raise error
             pass
-        #print (self.total_list)
 
-
-
-
-    def get_monthly_precip(self):
-        pass
 
     def get_yearly_precip(self):
         pass
 
+    def get_pressure_direction(self):
+        out_list = []
+        for entry in self.data[:7]:
 
-        """to do:
-        select last date of each day and pull data for each of those, then add today_precip"""
+            #pressure = self.return_value_list(entry, 'current_pressure')
+            out_list.append(entry[2])
+        out_list.reverse()
+        return out_list
 
+    def get_point_list(self):
+        pressure_list = self.get_pressure_direction()
+        if (abs(pressure_list[6]) - abs(pressure_list[5])) > .03 or (abs(pressure_list[6]) - abs(pressure_list[4])) > .02:
+            if (pressure_list [6] > pressure_list[5]) or (pressure_list [6] > pressure_list[4]):
+                out_var = "10,30 10,0 0,4 20,4, 10,0"
+                out_html = '&#8593'
+                print (self.location, ': up')
+            else:
+                out_var = "10,0 10,30, 0,26, 20,26 10,30"
+                out_html = '&#8595'
+                print (self.location, ': down')
+            
+        else:
+            out_var = "10,0 10,30 0,26 20,26, 10,30"
+            out_html = '&#8594'
+            print (self.location, ': steady')
 
+        return out_html
 
-
-        #for x in range(0,rows):
-        #    inc = 0
-        #    for key in data_list:
-        #        out_dict[str(x)+key] = data[x][inc]
-        #        inc +=1
-        #        #print (inc)
-        #        #print (out_dict)
-        #print (out_dict)
-        #print (type(data))
-        #print (data)
-location_list = ['KWACARNA1', 'KWAFALLC80']
-out_list = []
-for location in location_list:
-    test = wunder_data(cnx, location)
-    out_list.append(test.template_out_dict())
-
-
-#print (out_list)
-output_text = output_template.render_template(out_list)
-
-with open('/var/www/weather_app/index.html', 'w') as out:
-        out.write(output_text)
-
-    #test.out_web_file()
-#print (test)
-#test.get_data()
-#test.print_current_data()
-#test.get_last_dates()
-#test.get_weekly_precip()
+        
+ 
 
 
+if __name__=="__main__":
+    location_list = ['KWACARNA1', 'KWAFALLC80']
+    out_list = []
+    for location in location_list:
+        weather_data = wunder_data(cnx, location)
+        out_list.append(weather_data.template_out_dict())
+
+    forecast_data = wu_forecast(cnx)
+    forecast_list = forecast_data.get_out_list()
+
+
+    #print (out_list)
+    output_text = output_template.render_template(out_list, forecast_list)
+
+    with open('/var/www/weather_app/index.html', 'w') as out:
+            out.write(output_text)
+
+    

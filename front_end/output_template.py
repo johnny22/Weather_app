@@ -9,6 +9,6 @@ template = Env.get_template('template.html')
 #template.globals['return_print_var'] = return_print_var
 #template.globals['len'] = len 
 
-def render_template(dict_list):
+def render_template(dict_list, forecast_list):
     """This renders the jinja template."""
-    return template.render(dict_list=dict_list)
+    return template.render(dict_list=dict_list, forecast_list=forecast_list)
