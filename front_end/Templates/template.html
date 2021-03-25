@@ -2,14 +2,21 @@
 {% block content %}
 
 <div class="main">
+    <div class="current">
     {% for weather_dict in dict_list %}
     <div class="{{weather_dict.class}}">
         <p> Date: {{weather_dict.date}}</p>
         <p> Location: {{weather_dict.location}}</p>
-        <p>Pressure: {{weather_dict.current_pressure}}</p>
+        <p>Pressure: {{weather_dict.current_pressure}}
+        <span>{{weather_dict.pressure_direction}}</span>
+        </p>
         <p>Temperature: {{weather_dict.current_temp}}</p>
         <p>Rain Today: {{weather_dict.today_precip}}</p>
         <p>Humidity: {{weather_dict.current_humidity}} </p>
+        <p> Wind: {{weather_dict.wind_speed}} </p>
+        <p> Wind Direction: {{weather_dict.wind_direction}} </p>
+        <p> Wind Gust: {{weather_dict.wind_gust}} </p>
+
         <p>Rainfall for the last 7 days:</p>
     {% for daily_rain in weather_dict.rain_list %}
     <p>{{daily_rain.0}}: {{daily_rain.1}} </p>
@@ -17,6 +24,22 @@
     <p>Total Rainfall this week: {{weather_dict.weekly_rain}}</p>
     </div>
     {% endfor %}
+    </div>
+    <div class="forecast">
+        <div class="forecast_left">
+            <p> Location: Carnation </p>
+        {% for day_dict in forecast_list %}
+        <p> Date: {{day_dict.date_forecast}}</p>
+        <p> High: {{day_dict.max_temp}} Low: {{day_dict.min_temp}}</p>
+        <p> Day: {{day_dict.precip_chance_day}}% {{day_dict.precip_type_day}} {{day_dict.qpf}}in</p>
+        <p>Night: {{day_dict.precip_chance_night}}% {{day_dict.precip_type_night}} {{day_dict.qpf}}in</p>
+        
+        <p> Humidity: {{day_dict.relative_humidity_day}}</p>
+        <p> Wind: {{day_dict.wind_speed_day}} mph {{day_dict.wind_direction_cardinal_day}}</p>
+        <br>
+        {% endfor %}
+    </div>
+    </div>
 </div>
 
 {% endblock %}

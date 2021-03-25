@@ -10,8 +10,8 @@ requests = "*"
 beautifulsoup4 = "*"
 mysql-connector-python = "*"
 aioambient = "*"
-ambient_api = "*"
-jinja2 = "*"
+ambient-api = "*"
+Jinja2 = "*"
 
 [requires]
 python_version = "3"

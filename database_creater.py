@@ -136,6 +136,11 @@ wunderground_column_list = [
         'current_temp decimal(6,2)',
         'today_precip decimal(6,2)',
         'current_humidity decimal(6,2)',
+        'wind_speed decimal(6,2)',
+        'wind_direction decimal(6,2)',
+        'wind_gust decimal(6,2)',
+        'wind_chill decimal(6,2)',
+        'dew_point decimal(6,2)'
         ]
 
 wunderground_forecast_column_list = [
@@ -156,6 +161,8 @@ wunderground_forecast_column_list = [
         'snow_amount_night decimal(6,2)',
         'wind_direction_day decimal(6,2)',
         'wind_direction_night decimal(6,2)',
+        'wind_direction_cardinal_day VARCHAR(255)',
+        'wind_direction_cardinal_night VARCHAR(255)',
         'wind_speed_day decimal(6,2)',
         'wind_speed_night decimal(6,2)',
         'cloud_cover_chance_day decimal(6,2)',
@@ -164,7 +171,8 @@ wunderground_forecast_column_list = [
 
 
 
-accuweather_column_list = ['date datetime',
+accuweather_column_list = [
+        'date datetime',
         'location VARCHAR(255)',
         'hour_precip decimal(6,2)',
         'humidity decimal(6,2)',
@@ -188,5 +196,5 @@ accuweather_column_list = ['date datetime',
         ]
 
 create_table('wunderground', wunderground_column_list)
-create_table('accuweather', accuweather_column_list)
-create_table('wunderground_forecast', wunderground_forecast_column_list)
+#create_table('accuweather', accuweather_column_list)
+#create_table('wunderground_forecast', wunderground_forecast_column_list)
