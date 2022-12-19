@@ -53,7 +53,6 @@ def store_list(table, data_dict):
     #sql = "INSERT INTO {} ({}) VALUES ({})".format(table, *column_list, *data_list)
     try:
         #sql = "INSERT INTO wunderground (current_temp, current_pressure, today_precip, current_humidity, date) VALUES(25,59,.3,65, '{}')".format(current_date)
-        #print (sql)
         cursor.execute(sql)
         cnx.commit()
     except ValueError:

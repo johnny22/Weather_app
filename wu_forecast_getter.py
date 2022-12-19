@@ -23,12 +23,16 @@ headers = {
 
 def make_call(location_code):
     """ for now, we will ignore location_code, but we will want to implement that in the future"""
-    apikey = '6532d6454b8aa370768e63d6ba5a832e' 
+    #Old
+    #apikey = '6532d6454b8aa370768e63d6ba5a832e' 
+    apikey = 'e1f10a1e78da46f5b10a1e78da96f525'
     location_cords = '47.45%2C-122.31'
     URL = "https://api.weather.com/v3/wx/forecast/daily/15day?apiKey={0}&geocode={1}&language=en-US&units=e&format=json".format(apikey, location_code)
 
     if not READ_FROM_DISK:
         r = requests.get(URL, headers=headers)
+        #print(r.status_code)
+        #print (r.content)
         with open('forecast_results.pk1', 'wb') as out_file:
             pickle.dump(r, out_file)
     else:

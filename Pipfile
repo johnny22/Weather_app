@@ -12,6 +12,10 @@ mysql-connector-python = "*"
 aioambient = "*"
 ambient-api = "*"
 Jinja2 = "*"
+plotly = "*"
+matplotlib = "*"
+pandas = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3"

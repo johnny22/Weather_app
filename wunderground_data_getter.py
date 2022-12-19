@@ -20,6 +20,9 @@ def make_call(url_code):
         with open('page.pk1', 'rb') as in_file:
             page = pickle.load(in_file) 
 
+    print("Status Code *************************")
+    print(url_code)
+    print(page.status_code)
     soup = BeautifulSoup(page.content, 'html.parser')
     return soup
     #current_conditions = Wu_Data(soup)
@@ -67,7 +70,8 @@ class WuData():
 
 
 if __name__ == "__main__":
-    location_list = ['KWACARNA1', 'KWAFALLC80']
+    #location_list = ['KWACARNA1', 'KWAFALLC80', 'KWAFALLC81']
+    #location_list = ['KWACARNA1', 'KWAFALLC80']
     page_list = []
     for location in location_list:
         page = make_call(location)
@@ -77,7 +81,7 @@ if __name__ == "__main__":
     for tup in page_list:
         conditions = WuData(tup[0], tup[1])
         wunder_data = conditions.get_data_dict()
-        print (wunder_data)
+        #print (wunder_data)
 
 
 

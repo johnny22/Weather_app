@@ -1,1 +1,3 @@
 add location to wu_forecast database
+figure out how to handle range for forecast (e.g. 1-3)
+

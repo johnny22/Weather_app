@@ -37,8 +37,8 @@ class examiner():
         ]
 
         self.get_wu_current_data()
-        self.get_current_data()
-        self.get_wu_forecast()
+        #self.get_current_data()
+        #self.get_wu_forecast()
 
 
     def __str__(self):

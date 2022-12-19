@@ -4,6 +4,7 @@ import accuweather_data_getter as accu
 import wu_forecast_getter
 import data_storer
 import datetime
+import time
 
 counter_var = 1
 
@@ -11,7 +12,8 @@ def get_wu_current():
     #get data from wunderground
     ##################################################
     #Need to update from wunderground_data_getter for new way of calling
-    location_list = ['KWACARNA1', 'KWAFALLC80']
+    #location_list = ['KWACARNA1', 'KWAFALLC80']
+    location_list = ['KWACARNA1', 'KWAFALLC80', 'KWAFALLC81']
     page_list = []
     for location in location_list:
         page = wunder.make_call(location)
@@ -23,6 +25,7 @@ def get_wu_current():
 
         #Store wunderground data
         #print (type(wunder_data))
+        print(f"Here {wunder_data}")
         data_storer.store_list('wunderground', wunder_data)
 
 
@@ -64,7 +67,7 @@ def get_wu_forecast():
         for day in forecast:
             data_storer.store_list('wunderground_forecast', day)
 
-
+start = time.process_time()
 
 with open('log.txt', 'a') as log_file:
     #print (datetime.datetime.now())
@@ -74,3 +77,5 @@ with open('log.txt', 'a') as log_file:
 get_wu_current()
 get_accuweather()
 get_wu_forecast()
+end = time.process_time()
+print (end - start)

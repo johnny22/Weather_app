@@ -3,6 +3,17 @@ import mysql.connector
 from mysql.connector import errorcode
 import datetime
 import decimal
+import plotly.express as px
+import seaborn as sns
+import matplotlib as mpl
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+import numpy as np
+import plotly.graph_objects as go
+import io
+import time
+#from base64 import b64encode
+
 #server only
 import os
 import output_template
@@ -46,6 +57,10 @@ class wu_forecast():
         self.get_forecast_data()
         self.out_list_test()
 
+
+        
+
+
     def get_forecast_data(self):
         table = {39: None, 91: None, 93: None}
         # does this get every forecast from today, or only the last one?
@@ -88,7 +103,7 @@ class wu_forecast():
     def get_last_gathered_date(self, in_list):
         """ takes a list of all databse entries gathered this hour, and returns the date the last one was gathered on"""
         date_gathered_list = []
-        print (in_list)
+        #print (in_list)
         for out_day in in_list:
             for y in out_day:
                 #print (y, ': ', out_day[y])
@@ -123,6 +138,7 @@ class wunder_data():
         self.get_current_data()
         self.get_last_dates()
         self.get_weekly_precip()
+        self.get_temp_list()
         #self.out_web_file()
 
     def __str__(self):
@@ -144,9 +160,74 @@ class wunder_data():
         output += ("\nTotal rainfall for this week is : " + str(self.weekly_precip))
         return output
 
+    def get_temp_list(self):
+        """Gets last temp:time list"""
+        data_list = ['current_temp', 'date']
+        temp_list = []
+        day = datetime.datetime.now()
+        from_day = day - datetime.timedelta(days=1)
+        #location = 'KWACARNA1'
+        sql = f"SELECT current_temp, date FROM wunderground WHERE date > '{str(from_day)}' and location='{self.location}' ORDER BY date DESC"
+        self.cursor.execute(sql)
+        info_list = self.cursor.fetchall()
+        #print (info_list)
+        time_list = []
+        for item in info_list:
+            time_list.append(np.datetime64(item[1]))
+            temp_list.append(item[0])
+        f_date = mpl.dates.DateFormatter('%H')
+        print (self.location)
+        #for x in time_list:
+        #    print(x)
+        print (len(time_list))
+        print (len(temp_list))
 
-    def get_json(self):
-        pass
+
+
+
+        #Matplotlib
+        #fig, ax  = plt.subplots(figsize=(3.5,3))
+        #ax.plot(time_list, temp_list)
+        #ax.xaxis.set_major_formatter(f_date)
+        #ax.grid(visible=True, which='major')
+
+        #fig.write_html('/var/www/weather_app/graph.html')
+        #file_name = f'/var/www/weather_app/temp{self.location}.png'
+        #fig.savefig(file_name)
+        #self.graph = f'/temp{self.location}.png'
+
+        #Plotlyexpress
+        #file_name = f'/var/www/weather_app/temp{self.location}.html'
+        #self.graph = f'/temp{self.location}.html'
+        #print (time_list, temp_list)
+        fig = px.line(x=time_list, y=temp_list, labels=dict(x="Time", y="Temperature"))
+        #fig = sns.lineplot(x=time_list, y=temp_list)
+        max_temp = temp_list[0]
+        min_temp = temp_list[0]
+        for temp in temp_list:
+            if temp > max_temp:
+                max_temp = temp
+            if temp < min_temp:
+                min_temp = temp
+
+        for temp in temp_list:
+            if temp == max_temp:
+                ind = temp_list.index(temp)
+                fig.add_annotation(x=time_list[ind], y=temp, text=str(temp))
+            if temp == min_temp:
+                ind = temp_list.index(temp)
+                fig.add_annotation(x=time_list[ind], y=temp, text=str(temp))
+        #print (plot(fig))
+        #fig.write_html(file_name)
+        buffer_s = io.StringIO()
+        fig.write_html(buffer_s, include_plotlyjs='cdn')
+        self.html_graph = buffer_s.getvalue()
+        buffer_s.close()
+        print (buffer_s.closed)
+        del buffer_s
+        del fig
+
+        #print (type(self.html_graph))
 
     def template_out_dict(self):
         out_dict = {}
@@ -163,8 +244,11 @@ class wunder_data():
             out_dict['class'] = 'right'
 
         out_dict['pressure_direction'] = self.get_point_list()
-
+        print("Here")
+        print(out_dict['today_precip'])
         out_dict['weekly_rain'] = str((self.weekly_precip + out_dict['today_precip']))
+        #out_dict['temp_graph'] = str(self.graph)
+        out_dict['html_graph'] = str(self.html_graph)
         return out_dict
 
 
@@ -189,7 +273,12 @@ class wunder_data():
     def get_data(self):
         table = {39: None, 91: None, 93: None}
         self.data_list = ['date', 'location', 'current_pressure', 'current_temp', 'today_precip', 'current_humidity', 'wind_speed', 'wind_direction', 'wind_gust', 'wind_chill', 'dew_point']
-        sql = "SELECT {0} FROM wunderground WHERE location='{1}' ORDER BY date DESC".format(str(self.data_list).translate(table), self.location)
+        #sql = f"SELECT {str(self.data_list).translate(table)} FROM wunderground WHERE location='{self.location}' ORDER BY date DESC"
+
+        now = datetime.datetime.now()
+        first_date = now - datetime.timedelta(days=8)
+        #print (first_date)
+        sql = f"SELECT {str(self.data_list).translate(table)} FROM wunderground WHERE date > '{first_date}' and location='{self.location}' ORDER BY date DESC"
         self.cursor.execute(sql)
         self.data = self.cursor.fetchall()
         #print (self.data)
@@ -200,8 +289,13 @@ class wunder_data():
         out_dict = {}
         x = 0
         inc = 0
+        print(self.data_list)
         for key in self.data_list:
+            print(key)
+            #print(self.data[x][inc])
+            #print(self.data)
             out_dict[key] = self.data[x][inc]
+            #out_dict[key] = self.data[inc]
             inc +=1
             #print (inc)
             #print (out_dict)
@@ -295,6 +389,10 @@ class wunder_data():
 
     def get_point_list(self):
         pressure_list = self.get_pressure_direction()
+        if len(pressure_list) < 6:
+            out_html = 'No data'
+            print( self.location, ': low data')
+            return out_html
         if (abs(pressure_list[6]) - abs(pressure_list[5])) > .03 or (abs(pressure_list[6]) - abs(pressure_list[4])) > .02:
             if (pressure_list [6] > pressure_list[5]) or (pressure_list [6] > pressure_list[4]):
                 out_var = "10,30 10,0 0,4 20,4, 10,0"
@@ -317,7 +415,10 @@ class wunder_data():
 
 
 if __name__=="__main__":
-    location_list = ['KWACARNA1', 'KWAFALLC80']
+    start = time.process_time()
+    location_list = ['KWACARNA1', 'KWAFALLC80', 'KWAFALLC81']
+    #location_list = ['KWACARNA1', 'KWAFALLC80']
+    #location_list = ['KWAFALLC80', 'KWACARNA1' ]
     out_list = []
     for location in location_list:
         weather_data = wunder_data(cnx, location)
@@ -332,5 +433,7 @@ if __name__=="__main__":
 
     with open('/var/www/weather_app/index.html', 'w') as out:
             out.write(output_text)
+    end = time.process_time()
+    print (end - start)
 
     
