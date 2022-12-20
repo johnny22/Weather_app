@@ -4,6 +4,8 @@ from mysql.connector import errorcode
 import datetime
 import decimal
 import plotly.express as px
+#import plotly
+import plotly.subplots
 import seaborn as sns
 import matplotlib as mpl
 import matplotlib.patches as mpatches
@@ -164,23 +166,28 @@ class wunder_data():
         """Gets last temp:time list"""
         data_list = ['current_temp', 'date']
         temp_list = []
+        time_list = []
+        pressure_list = []
         day = datetime.datetime.now()
         from_day = day - datetime.timedelta(days=1)
         #location = 'KWACARNA1'
-        sql = f"SELECT current_temp, date FROM wunderground WHERE date > '{str(from_day)}' and location='{self.location}' ORDER BY date DESC"
+        sql = f"SELECT current_temp, current_pressure, date FROM wunderground WHERE date > '{str(from_day)}' and location='{self.location}' ORDER BY date DESC"
         self.cursor.execute(sql)
         info_list = self.cursor.fetchall()
         #print (info_list)
-        time_list = []
+
         for item in info_list:
-            time_list.append(np.datetime64(item[1]))
+            time_list.append(np.datetime64(item[2]))
+            pressure_list.append(item[1])
             temp_list.append(item[0])
         f_date = mpl.dates.DateFormatter('%H')
         print (self.location)
         #for x in time_list:
         #    print(x)
-        print (len(time_list))
-        print (len(temp_list))
+        #print (len(time_list))
+        #print (len(temp_list))
+        print("Pressure")
+        print(pressure_list)
 
 
 
@@ -199,9 +206,33 @@ class wunder_data():
         #Plotlyexpress
         #file_name = f'/var/www/weather_app/temp{self.location}.html'
         #self.graph = f'/temp{self.location}.html'
-        #print (time_list, temp_list)
-        fig = px.line(x=time_list, y=temp_list, labels=dict(x="Time", y="Temperature"))
-        #fig = sns.lineplot(x=time_list, y=temp_list)
+
+        #fig = px.line(x=time_list, y=temp_list, labels=dict(x="Time", y="Temperature"))
+
+
+
+
+
+        #Two Axis try
+        fig = plotly.subplots.make_subplots(specs=[[{"secondary_y": True}]])
+        #traces
+        fake_pressure = [30, 30.5, 30.2, 31, 30.9, 31.3]
+        fig.add_trace(go.Scatter(x=time_list, y=temp_list, name="Temperature"), secondary_y=False)
+        fig.add_trace(go.Scatter(x=time_list, y=pressure_list, name="Pressure"), secondary_y=True)
+
+        #Remove legend
+        fig.update_layout(showlegend=False)
+
+        #x axis title
+        fig.update_xaxes(title_text="Time")
+
+        #y axis title
+        fig.update_yaxes(title_text="Temp", secondary_y=False)
+        fig.update_yaxes(title_font_color="blue", secondary_y=False)
+        fig.update_yaxes(title_text="Pressure", secondary_y=True)
+        fig.update_yaxes(title_font_color="red", secondary_y=True)
+
+
         max_temp = temp_list[0]
         min_temp = temp_list[0]
         for temp in temp_list:
@@ -243,9 +274,9 @@ class wunder_data():
         else:
             out_dict['class'] = 'right'
 
-        out_dict['pressure_direction'] = self.get_point_list()
-        print("Here")
-        print(out_dict['today_precip'])
+        #This line would put the pressure direction arrows back
+        #out_dict['pressure_direction'] = self.get_point_list()
+
         out_dict['weekly_rain'] = str((self.weekly_precip + out_dict['today_precip']))
         #out_dict['temp_graph'] = str(self.graph)
         out_dict['html_graph'] = str(self.html_graph)
@@ -289,7 +320,7 @@ class wunder_data():
         out_dict = {}
         x = 0
         inc = 0
-        print(self.data_list)
+        #print(self.data_list)
         for key in self.data_list:
             print(key)
             #print(self.data[x][inc])
