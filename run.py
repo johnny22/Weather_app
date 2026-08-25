@@ -5,6 +5,7 @@ import wu_forecast_getter
 import data_storer
 import datetime
 import time
+from timeit import default_timer
 
 counter_var = 1
 
@@ -12,8 +13,8 @@ def get_wu_current():
     #get data from wunderground
     ##################################################
     #Need to update from wunderground_data_getter for new way of calling
-    #location_list = ['KWACARNA1', 'KWAFALLC80']
-    location_list = ['KWACARNA1', 'KWAFALLC80', 'KWAFALLC81']
+    location_list = ['KWACARNA1', 'KWACARNA63', 'KWAFALLC80']
+    #location_list = ['KWACARNA1', 'KWACARNA63', 'KWAFALLC80', 'KWAFALLC81', 'KWAFALLC99']
     page_list = []
     for location in location_list:
         page = wunder.make_call(location)
@@ -25,7 +26,10 @@ def get_wu_current():
 
         #Store wunderground data
         #print (type(wunder_data))
-        print(f"Here {wunder_data}")
+        #for key in wunder_data:
+        #    if wunder_data[key] == None:
+        #        wunder_data[key] = 0
+        print(wunder_data)
         data_storer.store_list('wunderground', wunder_data)
 
 
@@ -55,6 +59,7 @@ def get_accuweather():
         accu_conditions = accu.AwData(accu_page)
         accu_data = accu_conditions.get_data_dict()
         #store accuweather data
+        print(accu_data)
         data_storer.store_list('accuweather', accu_data)
 
 def get_wu_forecast():
@@ -67,7 +72,7 @@ def get_wu_forecast():
         for day in forecast:
             data_storer.store_list('wunderground_forecast', day)
 
-start = time.process_time()
+start = default_timer()
 
 with open('log.txt', 'a') as log_file:
     #print (datetime.datetime.now())
@@ -75,7 +80,7 @@ with open('log.txt', 'a') as log_file:
     log_file.write(str(datetime.datetime.now()))
 
 get_wu_current()
-get_accuweather()
+#get_accuweather()
 get_wu_forecast()
-end = time.process_time()
-print (end - start)
+end = default_timer()
+print ("Process time: ", end - start)

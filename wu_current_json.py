@@ -25,6 +25,8 @@ def make_call(location):
         return response_data
     else:
         print ("Ignored : " + str(location))
+        print (r.status_code)
+        print (r.content)
         return None
 
 class WuData():

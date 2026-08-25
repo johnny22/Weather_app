@@ -72,7 +72,7 @@ class examiner():
     def get_wu_current_data(self):
         table = {39: None, 91: None, 93: None}
         self.data_list = ['date', 'location', 'current_pressure', 'current_temp', 'today_precip', 'current_humidity', 'wind_speed', 'wind_direction', 'wind_gust', 'wind_chill', 'dew_point']
-        sql = "SELECT {} FROM wunderground ORDER BY date DESC".format(str(self.data_list).translate(table))
+        sql = "SELECT {} FROM wunderground ORDER BY date DESC limit 10".format(str(self.data_list).translate(table))
         print(sql)
         self.cursor.execute(sql)
         self.data = self.cursor.fetchall()

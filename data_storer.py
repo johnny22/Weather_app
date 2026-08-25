@@ -1,6 +1,7 @@
 import datetime
 import mysql.connector
 from mysql.connector import errorcode
+from mysql.connector import errors
 import mysql_config
 
 
@@ -16,7 +17,7 @@ def store_data(table, column, data):
         #print (sql)
         cursor.execute(sql)
         cnx.commit()
-    except ValueError:
+    except errors.ProgrammingError as e:
         print('bummer')
 
     #print (table, column, data)
@@ -55,8 +56,8 @@ def store_list(table, data_dict):
         #sql = "INSERT INTO wunderground (current_temp, current_pressure, today_precip, current_humidity, date) VALUES(25,59,.3,65, '{}')".format(current_date)
         cursor.execute(sql)
         cnx.commit()
-    except ValueError:
-        print('bummer')
+    except errors.ProgrammingError as e:
+        print('None in field')
     #for column in data_dict:
     #    store_data(table, column, data_dict[column])
 

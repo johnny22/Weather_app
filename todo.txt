@@ -1,4 +1,10 @@
 add location to wu_forecast database
 Implement better logging
 
+Graphic for temp, rain, humidity
+graphic for wind strength, direction, and gust
+
+graphic for rainfal for the last week
+
+
 

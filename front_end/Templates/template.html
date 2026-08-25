@@ -15,7 +15,8 @@
         <p>Humidity: {{weather_dict.current_humidity}} </p>
         <p> Wind: {{weather_dict.wind_speed}} </p>
         <p> Wind Direction: {{weather_dict.wind_direction}} </p>
-        <p> Wind Gust: {{weather_dict.wind_gust}} </p>
+        <p> Wind Gust(10 minutes): {{weather_dict.wind_gust}} </p>
+        <p> Wind Gust(24 hours): {{weather_dict.twenty_four_hour_gust}} </p>
 
         <p>Rainfall for the last 7 days:</p>
     {% for daily_rain in weather_dict.rain_list %}
@@ -26,6 +27,7 @@
     </div>
     {% endfor %}
     </div>
+    {% if forecast_list %}
     <div class="forecast">
         <div class="forecast_left">
             <p> Location: Carnation </p>
@@ -41,6 +43,7 @@
         {% endfor %}
     </div>
     </div>
+    {% endif %}
 </div>
 
 {% endblock %}

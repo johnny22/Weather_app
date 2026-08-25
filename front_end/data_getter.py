@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
 import io
-import time
+#import time
+from timeit import default_timer
 #from base64 import b64encode
 
 #server only
@@ -37,19 +38,19 @@ class wu_forecast():
         'precip_chance_day',
         'precip_chance_night',
         'relative_humidity_day',
-        'relative_humidity_night',
-        'wx_phrase_day',
-        'wx_phrase_night',
-        'snow_amount_day',
-        'snow_amount_night',
-        'wind_direction_day',
+        #'relative_humidity_night',
+        #'wx_phrase_day',
+        #'wx_phrase_night',
+        #'snow_amount_day',
+        #'snow_amount_night',
+        #'wind_direction_day',
         'wind_direction_cardinal_day',
-        'wind_direction_night',
-        'wind_direction_cardinal_night',
+        #'wind_direction_night',
+        #'wind_direction_cardinal_night',
         'wind_speed_day',
-        'wind_speed_night',
-        'cloud_cover_chance_day',
-        'cloud_cover_chance_night'
+        #'wind_speed_night',
+        #'cloud_cover_chance_day',
+        #'cloud_cover_chance_night'
         ]
         self.date = str(datetime.datetime.now())[:-13]
         #print (datetime.datetime.now().date())
@@ -57,19 +58,23 @@ class wu_forecast():
         self.connection = connection
         self.cursor = self.connection.cursor()
         self.get_forecast_data()
-        self.out_list_test()
+        #self.out_list_test()
 
 
         
 
 
     def get_forecast_data(self):
+        forecast_start = default_timer()
         table = {39: None, 91: None, 93: None}
         # does this get every forecast from today, or only the last one?
         sql = "SELECT {0} FROM wunderground_forecast WHERE date_gathered LIKE '{1}%' ORDER BY date_forecast DESC".format(str(self.wunderground_forecast_column_list).translate(table), self.date)
         self.cursor.execute(sql)
         self.forecast_data = self.cursor.fetchall()
+        forecast_end = default_timer()
+        print("forecast db time = ", forecast_end - forecast_start)
 
+    
     def get_out_list(self):
         """this should return a list of dictionaries for each day"""
         out_list = []
@@ -95,9 +100,9 @@ class wu_forecast():
 
         for day in out_list:
             if day['date_gathered'] == last_date:
-                shortened_out_list.append(day)
+                shortened_out_list.insert(0, day)
 
-        shortened_out_list.reverse()
+        #shortened_out_list.reverse()
             
 
         return shortened_out_list
@@ -112,7 +117,7 @@ class wu_forecast():
                 if y == "date_gathered":
                     date_gathered_list.append(out_day[y])
         date_gathered_list = list(set(date_gathered_list))
-        print (date_gathered_list)
+        #print (date_gathered_list)
         last_date = date_gathered_list[0]
         for date in date_gathered_list:
             if date > last_date:
@@ -136,11 +141,13 @@ class wunder_data():
         self.location = location
         self.connection = connection
         self.cursor = self.connection.cursor()
+        #This is to enable only printing the graph if there is data
+        self.html_graph = None
         self.get_data()
         self.get_current_data()
         self.get_last_dates()
         self.get_weekly_precip()
-        self.get_temp_list()
+        self.make_graph()
         #self.out_web_file()
 
     def __str__(self):
@@ -162,33 +169,68 @@ class wunder_data():
         output += ("\nTotal rainfall for this week is : " + str(self.weekly_precip))
         return output
 
-    def get_temp_list(self):
-        """Gets last temp:time list"""
+    def make_graph(self):
+        """Gets last temp, pressure, and time list"""
+        db_time = default_timer()
         data_list = ['current_temp', 'date']
         temp_list = []
         time_list = []
+        working_time_list = []
         pressure_list = []
+        precip_list = []
+        precip_per_sample = []
         day = datetime.datetime.now()
         from_day = day - datetime.timedelta(days=1)
         #location = 'KWACARNA1'
-        sql = f"SELECT current_temp, current_pressure, date FROM wunderground WHERE date > '{str(from_day)}' and location='{self.location}' ORDER BY date DESC"
+        sql = f"SELECT current_temp, current_pressure, date, today_precip FROM wunderground WHERE date > '{str(from_day)}' and location='{self.location}' ORDER BY date DESC"
         self.cursor.execute(sql)
         info_list = self.cursor.fetchall()
+        db_end = default_timer()
+        print ("db_time: ", db_end - db_time)
+        print (len(info_list))
+        if len(info_list) ==0:
+            return
         #print (info_list)
-
+        last_time = ''
+        last_precip = 0
         for item in info_list:
-            time_list.append(np.datetime64(item[2]))
-            pressure_list.append(item[1])
-            temp_list.append(item[0])
+            if item[2] != last_time:
+                #print (item[2])
+                time_list.append(np.datetime64(item[2]))
+                working_time_list.append(item[2])
+                pressure_list.append(item[1])
+                temp_list.append(item[0])
+                precip_list.append(item[3])
+            last_time = item[2]
         f_date = mpl.dates.DateFormatter('%H')
-        print (self.location)
-        #for x in time_list:
-        #    print(x)
-        #print (len(time_list))
-        #print (len(temp_list))
-        print("Pressure")
-        print(pressure_list)
+        print("date list length: ", len(time_list))
+        print("precip list length: ", len(precip_list))
+        
+        last_measure = precip_list[len(precip_list)-1]
+        for rain in reversed(precip_list):
+            if rain - last_measure < 0:
+                precip_per_sample.append(0)
+            else:
+                precip_per_sample.append(rain-last_measure)
+            last_measure = rain
 
+        working_hour = working_time_list[-1].hour
+        hourly_total = 0
+        hourly_precip = [x*0 for x in range(len(precip_per_sample))]
+        for x in range(len(precip_per_sample)):
+            if working_time_list[-x].hour == working_hour:
+                hourly_total+= precip_per_sample[-x]
+            else: 
+                working_hour = working_time_list[-x].hour
+                hourly_precip.insert(-x, hourly_total)
+                hourly_total = 0
+            #print (working_time_list[-x].hour)
+            #print (hourly_precip)
+            #print (precip_per_sample[-x])
+        #print (len(precip_per_sample))
+        #print (len(hourly_precip))
+        for x in range(len(precip_per_sample)):
+            print ("per sample: ", precip_per_sample[x], "Hourly: ", hourly_precip[x])
 
 
 
@@ -219,6 +261,18 @@ class wunder_data():
         fake_pressure = [30, 30.5, 30.2, 31, 30.9, 31.3]
         fig.add_trace(go.Scatter(x=time_list, y=temp_list, name="Temperature"), secondary_y=False)
         fig.add_trace(go.Scatter(x=time_list, y=pressure_list, name="Pressure"), secondary_y=True)
+        #Need to get hourly rain, I think the only way is to get daily_precip at the end of each hour, and then subtract the previous number
+        #fig.add_trace(go.Scatter(x=time_list, y=precip_list, name="Rain", yaxis='y3', fill='tozeroy'))
+        #600000 width = 10 minutes
+        fig.add_trace(go.Bar(x=time_list, y=hourly_precip, name="Rain", yaxis='y3', width=3600000))
+        fig.update_layout(
+            yaxis3=dict(
+                    overlaying='y',
+                    #anchor="free",
+                    #side="right"
+                    position=0.05
+                    )
+            )
 
         #Remove legend
         fig.update_layout(showlegend=False)
@@ -232,7 +286,8 @@ class wunder_data():
         fig.update_yaxes(title_text="Pressure", secondary_y=True)
         fig.update_yaxes(title_font_color="red", secondary_y=True)
 
-
+        #print (temp_list)
+        #print (len(temp_list))
         max_temp = temp_list[0]
         min_temp = temp_list[0]
         for temp in temp_list:
@@ -254,7 +309,7 @@ class wunder_data():
         fig.write_html(buffer_s, include_plotlyjs='cdn')
         self.html_graph = buffer_s.getvalue()
         buffer_s.close()
-        print (buffer_s.closed)
+        #print (buffer_s.closed)
         del buffer_s
         del fig
 
@@ -268,22 +323,22 @@ class wunder_data():
         for entry in self.total_list:
             out = (str(entry[0].date()), str(entry[1]))
             rain_list.append(out)
+        out_dict["twenty_four_hour_gust"] = self.twenty_four_hour_gust
         out_dict['rain_list'] = rain_list
         if self.location =='KWACARNA1':
             out_dict['class'] = 'left'
         else:
             out_dict['class'] = 'right'
 
-        #This line would put the pressure direction arrows back
-        #out_dict['pressure_direction'] = self.get_point_list()
-
         out_dict['weekly_rain'] = str((self.weekly_precip + out_dict['today_precip']))
         #out_dict['temp_graph'] = str(self.graph)
-        out_dict['html_graph'] = str(self.html_graph)
+        if self.html_graph:
+            out_dict['html_graph'] = str(self.html_graph)
         return out_dict
 
 
     def out_web_file(self):
+        #print("Are we ever in here? This is out_web_file")
         with open('/var/www/weather_app/index.html', 'w') as out:
             out_text = '<html> \n <body> \n'
             for entry in self.data_list:
@@ -308,10 +363,16 @@ class wunder_data():
 
         now = datetime.datetime.now()
         first_date = now - datetime.timedelta(days=8)
+        day_ago =  now - datetime.timedelta(hours=24)
         #print (first_date)
         sql = f"SELECT {str(self.data_list).translate(table)} FROM wunderground WHERE date > '{first_date}' and location='{self.location}' ORDER BY date DESC"
         self.cursor.execute(sql)
         self.data = self.cursor.fetchall()
+        self.twenty_four_hour_gust = 0
+        for entry in self.data:
+            if entry[0] > day_ago:
+                if entry[8] > self.twenty_four_hour_gust:
+                    self.twenty_four_hour_gust = entry[8]
         #print (self.data)
 
 
@@ -320,11 +381,7 @@ class wunder_data():
         out_dict = {}
         x = 0
         inc = 0
-        #print(self.data_list)
         for key in self.data_list:
-            print(key)
-            #print(self.data[x][inc])
-            #print(self.data)
             out_dict[key] = self.data[x][inc]
             #out_dict[key] = self.data[inc]
             inc +=1
@@ -406,65 +463,33 @@ class wunder_data():
             pass
 
 
-    def get_yearly_precip(self):
-        pass
 
-    def get_pressure_direction(self):
-        out_list = []
-        for entry in self.data[:7]:
-
-            #pressure = self.return_value_list(entry, 'current_pressure')
-            out_list.append(entry[2])
-        out_list.reverse()
-        return out_list
-
-    def get_point_list(self):
-        pressure_list = self.get_pressure_direction()
-        if len(pressure_list) < 6:
-            out_html = 'No data'
-            print( self.location, ': low data')
-            return out_html
-        if (abs(pressure_list[6]) - abs(pressure_list[5])) > .03 or (abs(pressure_list[6]) - abs(pressure_list[4])) > .02:
-            if (pressure_list [6] > pressure_list[5]) or (pressure_list [6] > pressure_list[4]):
-                out_var = "10,30 10,0 0,4 20,4, 10,0"
-                out_html = '&#8593'
-                print (self.location, ': up')
-            else:
-                out_var = "10,0 10,30, 0,26, 20,26 10,30"
-                out_html = '&#8595'
-                print (self.location, ': down')
-            
-        else:
-            out_var = "10,0 10,30 0,26 20,26, 10,30"
-            out_html = '&#8594'
-            print (self.location, ': steady')
-
-        return out_html
-
-        
- 
 
 
 if __name__=="__main__":
-    start = time.process_time()
-    location_list = ['KWACARNA1', 'KWAFALLC80', 'KWAFALLC81']
-    #location_list = ['KWACARNA1', 'KWAFALLC80']
-    #location_list = ['KWAFALLC80', 'KWACARNA1' ]
+    start = default_timer()
+    #location_list = ['KWACARNA63', 'KWAFALLC80', 'KWAFALLC99']
+    location_list = ['KWACARNA63', 'KWAFALLC80']
     out_list = []
     for location in location_list:
         weather_data = wunder_data(cnx, location)
         out_list.append(weather_data.template_out_dict())
+    print("Generating out_list took ", default_timer()-start)
 
-    forecast_data = wu_forecast(cnx)
-    forecast_list = forecast_data.get_out_list()
+    #forecast_start = default_timer()
+    #forecast_data = wu_forecast(cnx)
+    #forecast_list = forecast_data.get_out_list()
+    #forecast_end = default_timer()
+    #forecast_time = forecast_end - forecast_start
+    #print("Total forecast time = ", forecast_time)
 
 
     #print (out_list)
-    output_text = output_template.render_template(out_list, forecast_list)
+    output_text = output_template.render_template(out_list, forecast_list=False)
 
     with open('/var/www/weather_app/index.html', 'w') as out:
             out.write(output_text)
-    end = time.process_time()
-    print (end - start)
+    end = default_timer()
+    print ("Front end process time: ", end - start)
 
     

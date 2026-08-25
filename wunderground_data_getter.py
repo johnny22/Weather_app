@@ -40,7 +40,7 @@ class WuData():
             self.humidity = self.pretify_and_strip(response_in.find(class_="wu-unit-humidity").span)
             #self.wind = self.pretify_and_strip(response_in.find(class_="wu-unit").span)
             self.location = location
-            print (self.today_precip)
+            #print (self.today_precip)
         except AttributeError as error:
             print(response_in)
             raise error
