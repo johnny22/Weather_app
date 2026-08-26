@@ -1,0 +1,33 @@
+[project]
+name = "weather-app"
+version = "0.1.0"
+description = "Add your description here"
+authors = [{ name = "johnny22", email = "johnbilbro@gmail.com" }]
+requires-python = ">=3.10"
+readme = "README.md"
+dependencies = [
+    "jinja2>=3.1.6",
+    "matplotlib>=3.10.9",
+    "mysql-connector-python>=26.7.0",
+    "pandas>=2.3.3",
+    "plotly>=7.0.0",
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+weather-app = "weather_app:main"
+
+[dependency-groups]
+dev = []
+
+[tool.uv]
+package = false
+default-groups = "all"
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
