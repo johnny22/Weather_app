@@ -3,10 +3,9 @@ import mysql.connector
 from mysql.connector import errorcode
 import datetime
 import decimal
-import plotly.express as px
+#import plotly.express as px
 #import plotly
 import plotly.subplots
-import seaborn as sns
 import matplotlib as mpl
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -187,7 +186,7 @@ class wunder_data():
         info_list = self.cursor.fetchall()
         db_end = default_timer()
         print ("db_time: ", db_end - db_time)
-        print (len(info_list))
+        #print (len(info_list))
         if len(info_list) ==0:
             return
         #print (info_list)
@@ -229,8 +228,8 @@ class wunder_data():
             #print (precip_per_sample[-x])
         #print (len(precip_per_sample))
         #print (len(hourly_precip))
-        for x in range(len(precip_per_sample)):
-            print ("per sample: ", precip_per_sample[x], "Hourly: ", hourly_precip[x])
+        #for x in range(len(precip_per_sample)):
+            #print ("per sample: ", precip_per_sample[x], "Hourly: ", hourly_precip[x])
 
 
 
@@ -258,7 +257,7 @@ class wunder_data():
         #Two Axis try
         fig = plotly.subplots.make_subplots(specs=[[{"secondary_y": True}]])
         #traces
-        fake_pressure = [30, 30.5, 30.2, 31, 30.9, 31.3]
+        #fake_pressure = [30, 30.5, 30.2, 31, 30.9, 31.3]
         fig.add_trace(go.Scatter(x=time_list, y=temp_list, name="Temperature"), secondary_y=False)
         fig.add_trace(go.Scatter(x=time_list, y=pressure_list, name="Pressure"), secondary_y=True)
         #Need to get hourly rain, I think the only way is to get daily_precip at the end of each hour, and then subtract the previous number
@@ -404,7 +403,9 @@ class wunder_data():
     def get_last_dates(self):
         """ can only be called after get_data has been called. 
         This method will then go through all the data and get the last entry from each day"""
-        sql =  "SELECT date FROM wunderground ORDER BY date ASC"
+        now = datetime.datetime.now()
+        first_date = now - datetime.timedelta(days=8)
+        sql =  f"SELECT date FROM wunderground where date > '{first_date}' ORDER BY date ASC"
         self.cursor.execute(sql)
         dates = self.cursor.fetchall()
         out_dates = []

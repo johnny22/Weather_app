@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
+numpy = "1.24"
 requests = "*"
 beautifulsoup4 = "*"
 mysql-connector-python = "*"
@@ -15,7 +16,6 @@ Jinja2 = "*"
 plotly = "*"
 matplotlib = "*"
 pandas = "*"
-seaborn = "*"
 
 [requires]
 python_version = "3"
