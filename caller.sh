@@ -4,7 +4,7 @@ cd /home/john/Weather_app
 PATH=/usr/local/bin:$PATH
 #./home/john/.local/share/virtualenvs/Weaher_app-NA3VrAeW/bin/activate
 #/home/john/.local/bin/pipenv run python run.py
-uv run python run.py
+/home/john/.local/bin/uv run run.py
 ./front_end/caller.sh
 
 #python run.py
